@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkillSync | AI Career Coach</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<nav class="glass-nav">
+    <div class="nav-content">
+        <div class="nav-logo">🚀 SkillSync</div>
+        
+        <div class="nav-links">
+            <a href="#" class="active">Home</a>
+            <a href="#" onclick="alert('History feature coming soon!')">History</a>
+        </div>
+
+        <div class="nav-auth">
+            <button id="loginBtn" onclick="login()" style="background: #4f46e5; color: white; border: none; padding: 8px 20px; border-radius: 20px; cursor: pointer; font-weight: 600; font-family: 'Poppins', sans-serif; transition: 0.2s;">
+                Sign In with Google
+            </button>
+
+            <div id="userProfile" style="display: none; align-items: center; gap: 12px;">
+                <span id="userName" style="font-weight: 600; color: #333; font-size: 0.95rem;"></span>
+                <img id="userImg" src="" style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
+            </div>
+        </div>
+    </div>
+</nav>
+
+<div class="main-wrapper">
+    <header>
+        <div class="logo">🚀 SkillSync</div>
+        <p>Upload your Resume. Paste the Job. Close the Gap.</p>
+    </header>
+
+    <div class="glass-card input-section">
+        <div class="input-group">
+            <label>📄 Upload Resume (PDF)</label>
+            <div class="file-drop-area">
+                <input type="file" id="resumeFile" accept=".pdf" required>
+                <span class="file-msg">Drag & Drop or Click to Upload</span>
+            </div>
+        </div>
+        
+        <div class="input-group">
+            <label>💼 Job Description</label>
+            <textarea id="jobDesc" placeholder="Paste the full job description here..."></textarea>
+        </div>
+
+        <button onclick="startAnalysis()" id="analyzeBtn">Analyze Match ⚡</button>
+    </div>
+
+    <div id="loader" class="hidden">
+        <div class="spinner"></div>
+        <p>Scanning your resume against industry standards...</p>
+    </div>
+
+    <div id="resultsArea" class="hidden" style="max-width: 1200px; margin: 40px auto; padding: 0 20px;">
+    
+    <div class="analysis-card">
+    
+    <div class="score-container">
+        <div class="score-circle">
+            <span id="scoreValue" style="font-size: 2rem; font-weight: bold;">0%</span>
+        </div>
+    </div>
+
+    <div class="text-container" style="flex: 1; margin-left: 20px;">
+        
+        <div class="readiness-section">
+            <div class="readiness-header">
+                <span class="readiness-label">🚀 Role Readiness</span>
+                <span class="readiness-gap" id="gap-text">Calculating...</span>
+            </div>
+            
+            <div class="progress-track">
+                <div class="progress-fill" id="readiness-bar"></div>
+            </div>
+
+            <p class="motivational-text" id="short-summary">
+                Analyze your resume to see your gap!
+            </p>
+        </div>
+
+    </div>
+</div>
+
+    <div class="glass-card" style="margin-bottom: 40px;">
+        <h3>✅ Your Strengths</h3>
+        <div id="matchedGrid" class="skills-container" style="display: flex; flex-wrap: wrap; gap: 10px;"></div>
+    </div>
+
+    <div class="learning-section">
+        <h2 class="section-title" style="text-align: center; margin-bottom: 20px;">Recommended Learning Path</h2>
+        
+        <div class="tabs-header">
+            <button class="tab-btn active" onclick="switchTab('youtube')">📺 Free Tutorials</button>
+            <button class="tab-btn" onclick="switchTab('courses')">🎓 Premium Courses</button>
+            <button class="tab-btn" onclick="switchTab('roadmap')">🚀 4-Week Roadmap</button>
+        </div>
+
+        <div id="youtube-tab" class="tab-content active-content">
+            </div>
+
+        <div id="courses-tab" class="tab-content">
+            </div>
+
+        <div id="roadmap-tab" class="tab-content">
+            </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 50px; padding-bottom: 50px;">
+        <button onclick="alert('Feature coming in Phase 2: AI Mock Interviewer!')" style="background: #2D3748; color: white; padding: 15px 30px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+            🎤 Practice Interview Questions
+        </button>
+    </div>
+
+</div>
+</div>
+
+<script>
+    // File Input UI Logic
+    document.getElementById('resumeFile').addEventListener('change', function(e) {
+        if(e.target.files[0]) {
+            document.querySelector('.file-msg').textContent = "✅ " + e.target.files[0].name;
+        }
+    });
+
+    async function startAnalysis() {
+        const fileInput = document.getElementById('resumeFile');
+        const jobInput = document.getElementById('jobDesc');
+        const btn = document.getElementById('analyzeBtn');
+        const loader = document.getElementById('loader');
+        const results = document.getElementById('resultsArea');
+
+        if(fileInput.files.length === 0 || !jobInput.value) {
+            alert("Please upload a PDF and paste a Job Description.");
+            return;
+        }
+
+        // Prepare Data
+        const formData = new FormData();
+        formData.append('resume', fileInput.files[0]);
+        formData.append('job_desc', jobInput.value);
+
+        // UI Transition
+        btn.disabled = true;
+        btn.style.opacity = "0.7";
+        loader.classList.remove('hidden');
+        results.classList.add('hidden');
+        
+        // CLEAR OLD TABS CONTENT
+        document.getElementById('youtube-tab').innerHTML = '';
+        document.getElementById('courses-tab').innerHTML = '';
+        document.getElementById('roadmap-tab').innerHTML = '';
+
+        try {
+            const response = await fetch('/analyze', {
+                method: 'POST',
+                body: formData 
+            });
+
+            const data = await response.json();
+            if(data.error) throw new Error(data.error);
+
+            // ============================================
+            // 🛡️ SAFE PROGRESS BAR LOGIC (Prevents Crashes)
+            // ============================================
+            
+            const score = data.match_score || 0;
+            const gap = 100 - score;
+
+            // 1. SAFE UPDATE: Score Number
+            // We check for both common ID names to be safe
+            const scoreEl = document.getElementById('scoreValue') || document.getElementById('match-score');
+            if (scoreEl) scoreEl.innerText = score + "%";
+            
+            // 2. SAFE UPDATE: Circle Border Color
+            const circle = document.querySelector('.score-circle');
+            if (circle) {
+                if(score > 75) circle.style.borderColor = "#00C853";
+                else if(score > 50) circle.style.borderColor = "#FFD600";
+                else circle.style.borderColor = "#FF3D00";
+            }
+
+            // 3. SAFE UPDATE: Readiness Bar Width
+            const bar = document.getElementById('readiness-bar');
+            if (bar) {
+                setTimeout(() => { bar.style.width = `${score}%`; }, 100);
+            }
+
+            // 4. SAFE UPDATE: Gap Text
+            const gapText = document.getElementById('gap-text');
+            if (gapText) gapText.innerText = `${gap}% Gap to Close`;
+
+            // 5. SAFE UPDATE: Motivational Text
+            const summaryText = document.getElementById('short-summary') || document.getElementById('summaryText');
+            if (summaryText) {
+                if (score > 80) {
+                    summaryText.innerText = "🔥 You are on fire! Just a few tweaks needed to qualify.";
+                    if (bar) bar.style.background = "linear-gradient(90deg, #10b981, #34d399)"; 
+                } else if (score > 50) {
+                    summaryText.innerText = "👍 Good foundation. Follow the roadmap below to close the gap.";
+                    if (bar) bar.style.background = "linear-gradient(90deg, #f59e0b, #fbbf24)";
+                } else {
+                    summaryText.innerText = "💪 Heavy lifting needed. Start with the basics in Week 1.";
+                    if (bar) bar.style.background = "linear-gradient(90deg, #ef4444, #f87171)";
+                }
+            }
+
+            // ============================================
+            // END OF SAFE LOGIC
+            // ============================================
+
+            // 2. RENDER MATCHED SKILLS
+            const matchedGrid = document.getElementById('matchedGrid');
+            if (matchedGrid) {
+                matchedGrid.innerHTML = "";
+                if(data.matched_skills && data.matched_skills.length > 0) {
+                    data.matched_skills.forEach(skill => {
+                        matchedGrid.innerHTML += `
+                            <span style="background: #e6fffa; color: #00bfa5; padding: 8px 16px; border-radius: 20px; font-weight: 600; font-size: 0.9rem; border: 1px solid #b2f5ea;">
+                                ✅ ${skill}
+                            </span>`;
+                    });
+                } else {
+                    matchedGrid.innerHTML = "<p style='color:#666;'>No direct keyword matches found.</p>";
+                }
+            }
+
+            // 3. POPULATE YOUTUBE TAB
+            const youtubeTab = document.getElementById('youtube-tab');
+            if (youtubeTab) {
+                data.missing_skills.forEach(item => {
+                    youtubeTab.innerHTML += `
+                        <div class="skill-card">
+                            <div class="skill-top">
+                                <h4>${item.skill}</h4>
+                                <span class="badge">Missing</span>
+                            </div>
+                            <p class="reason">${item.reason}</p>
+                            <div class="video-container">
+                                ${item.video_url ? 
+                                    `<iframe src="${item.video_url}" allowfullscreen></iframe>` : 
+                                    `<div class="no-video">No tutorial found</div>`}
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            // 4. POPULATE COURSES TAB
+            const coursesTab = document.getElementById('courses-tab');
+            if (coursesTab) {
+                let hasCourses = false;
+                data.missing_skills.forEach(item => {
+                    if (item.course_link) {
+                        hasCourses = true;
+                        coursesTab.innerHTML += `
+                            <div class="skill-card">
+                                <div class="skill-top">
+                                    <h4>${item.skill}</h4>
+                                    <span class="badge">Recommended</span>
+                                </div>
+                                <a href="${item.course_link}" target="_blank" class="course-link-card" style="display: flex; gap: 15px; margin-top: 15px; text-decoration: none; color: inherit; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; align-items: center;">
+                                    <div class="course-icon" style="width: 50px; height: 50px;">
+                                        <img src="${item.course_img}" alt="Course" style="width: 100%; height: 100%; object-fit: cover; border-radius: 4px;">
+                                    </div>
+                                    <div class="course-details">
+                                        <span class="course-label" style="font-size: 0.8rem; color: #64748b; font-weight: 600;">On ${item.course_source}</span>
+                                        <div class="course-title" style="font-weight: 600; font-size: 0.95rem; margin-top: 2px;">${item.course_title}</div>
+                                    </div>
+                                </a>
+                            </div>
+                        `;
+                    }
+                });
+                if (!hasCourses) coursesTab.innerHTML = "<p style='text-align:center; padding:20px;'>No premium courses found for these skills.</p>";
+            }
+
+            // 5. POPULATE ROADMAP TAB
+            const roadmapTab = document.getElementById('roadmap-tab');
+            if (roadmapTab && data.roadmap) {
+                let roadmapHtml = `
+                <div class="roadmap-container" style="max-width: 800px; margin: 0 auto;">
+                    <div class="timeline">`;
+
+                data.roadmap.forEach(step => {
+                    roadmapHtml += `
+                        <div class="timeline-item">
+                            <div class="timeline-dot"></div>
+                            <div class="timeline-content">
+                                <span class="timeline-date">${step.step}</span>
+                                <h4>${step.task}</h4>
+                                <p>${step.details}</p>
+                            </div>
+                        </div>
+                    `;
+                });
+                roadmapHtml += '</div></div>';
+                roadmapTab.innerHTML = roadmapHtml;
+            }
+
+            // Show Results
+            results.classList.remove('hidden');
+
+        } catch (error) {
+            alert("Error: " + error.message);
+            console.error(error);
+        } finally {
+            loader.classList.add('hidden');
+            btn.disabled = false;
+            btn.style.opacity = "1";
+        }
+    }
+
+    // --- TAB SWITCHING LOGIC ---
+    window.switchTab = function(tabName) {
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active-content'));
+
+        event.currentTarget.classList.add('active'); 
+        document.getElementById(tabName + '-tab').classList.add('active-content');
+    }
+</script>
+<script type="module">
+  // 1. Import the tools we need from Google
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getAuth, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+  // 2. PASTE YOUR CONFIG HERE (From the Firebase Console)
+ const firebaseConfig = {
+  apiKey: "PASTE_YOUR_FIREBASE_APIKEY_HERE",
+  authDomain: "skillsync-demo.firebaseapp.com",
+  projectId: "skillsync-demo",
+  storageBucket: "skillsync-demo.firebasestorage.app",
+  messagingSenderId: "771266680333",
+  appId: "1:771266680333:web:a31f2a49c883b88e42a744"
+};
+
+  // 3. Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const provider = new GoogleAuthProvider();
+
+  // 4. The Login Function (Attached to the window so the button can use it)
+  window.login = async () => {
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      
+      // Update the UI to show the user's photo
+      const loginBtn = document.getElementById('loginBtn');
+      const userProfile = document.getElementById('userProfile');
+      const userImg = document.getElementById('userImg');
+      const userName = document.getElementById('userName');
+
+      if(loginBtn) loginBtn.style.display = 'none';
+      if(userProfile) userProfile.style.display = 'flex';
+      if(userImg) userImg.src = user.photoURL;
+      if(userName) userName.innerText = "Hi, " + user.displayName.split(" ")[0];
+      
+      alert("✅ Signed in as " + user.displayName);
+    } catch (error) {
+      console.error("Login Error:", error);
+      alert("Login Failed: " + error.message);
+    }
+  };
+</script>
+
+</body>
+</html>
+
