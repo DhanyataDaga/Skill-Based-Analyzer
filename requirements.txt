@@ -1,5 +1,7 @@
-flask
+
+Flask
 flask-cors
 google-generativeai
 google-api-python-client
-pypdf
+PyPDF2
+gunicorn
