@@ -11,9 +11,11 @@ app = Flask(__name__)
 # 🔑 PASTE YOUR API KEYS HERE (INSIDE QUOTES)
 # ==========================================
 # REPLACE YOUR REAL KEYS WITH THESE PLACEHOLDERS
-GEMINI_API_KEY = "PASTE YOUR API KEY HERE"
-YOUTUBE_API_KEY = "PASTE YOUR API KEY HERE"
-SEARCH_ENGINE_ID = "PASTE YOUR SEARCH ID HERE"
+
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
+YOUTUBE_API_KEY = os.environ.get("YOUTUBE_API_KEY", "")
+SEARCH_ENGINE_ID = os.environ.get("SEARCH_ENGINE_ID", "")
+
 # ==========================================
 
 # 2. CONFIGURE APIs
